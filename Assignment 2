@@ -1,0 +1,138 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+
+df = pd.read_csv('C:\\Users\\Miswa Gandhi\\Desktop\\data2.txt')
+df.columns = ["x", "y"]
+df.plot(kind='scatter',x='x',y='y',color='red')
+plt.show()
+
+#to find coefficients- normal equation
+x = df['x'].values
+y = df['y'].values
+p = len(x)
+x_bias = np.ones((p,1))
+x = np.reshape(x,(p,1))
+x = np.append(x_bias,x,axis=1)
+x_transpose = np.transpose(x)
+x_transpose_dot_x = x_transpose.dot(x)
+temp_1 = np.linalg.inv(x_transpose_dot_x)
+temp_2=x_transpose.dot(y)
+theta =temp_1.dot(temp_2)
+print("Coefficients: ",theta)
+
+y = theta[0] + theta[1]*x
+df.plot(kind='scatter',x='x',y='y',color='green')
+plt.plot(x,y,'-',color='blue')
+plt.show()
+
+#array to get reshape
+p = len(x)
+x = np.reshape(df['x'].values,(p,1))
+y = np.reshape(df['y'].values,(p,1))
+
+def cal_cost(theta,X,y):
+    cost= np.sum(np.square(((np.dot(X, theta)) - y))) / (2 * (len(X)))  
+    return cost
+    
+def gradient_descent(x,y,theta,learning_rate=0.01,iterations=2000):
+    p = len(y)
+    cost_history = np.zeros(iterations)
+    theta_history = np.zeros((iterations,2))
+    for it in range(iterations):
+        prediction = np.dot(x,theta)
+        theta = theta -(1/p)*learning_rate*( x.T.dot((prediction - y)))
+        theta_history[it,:] = theta.T
+        cost_history[it]  = cal_cost(theta,x,y)
+   return theta, cost_history, theta_history
+   
+lr =0.02
+n_iter = 2000
+theta = np.random.randn(2,1)
+X_b = np.c_[np.ones((len(x),1)),x]
+theta,cost_history,theta_history = gradient_descent(X_b,y,theta,lr,n_iter)
+print('Theta0:          {:0.3f},\nTheta1:          {:0.3f}'.format(theta[0][0],theta[1][0]))
+print('Final cost/MSE:  {:0.3f}'.format(cost_history[-1]))
+print('-------------------------')
+for it in range(n_iter):
+    print("Iterations: ",it," MSE: ",round(cost_history[it],3))
+    
+fig,ax = plt.subplots(figsize=(8,4))
+ax.set_ylabel('J(MSE)')
+ax.set_xlabel('Iterations')
+_=ax.plot(range(n_iter),cost_history,'r-')
+
+p = len(x)
+X = np.reshape(df['x'].values,(p,1))
+y = np.reshape(df['y'].values,(p,1))
+
+def stocashtic_gradient_descent(X,y,theta,learning_rate=0.01,iterations=10):
+    p = len(y)
+    cost_history = np.zeros(iterations) 
+    for it in range(iterations):
+        cost =0.0
+        for i in range(p):
+            rand_ind = np.random.randint(0,p)
+            X_i = X[rand_ind,:].reshape(1,X.shape[1])
+            y_i = y[rand_ind].reshape(1,1)
+            prediction = np.dot(X_i,theta)
+
+            theta = theta -(1/p)*learning_rate*( X_i.T.dot((prediction - y_i)))
+            cost += cal_cost(theta,X_i,y_i)
+        cost_history[it]  = cost
+        
+    return theta, cost_history
+    
+    
+    lr =0.01
+n_iter = 2000
+theta = np.random.randn(2,1)
+X_b = np.c_[np.ones((len(X),1)),X]
+theta,cost_history = stocashtic_gradient_descent(X_b,y,theta,lr,n_iter)
+print('Theta0:          {:0.3f},\nTheta1:          {:0.3f}'.format(theta[0][0],theta[1][0]))
+print('Final cost/MSE:  {:0.3f}'.format(cost_history[-1]))
+print('-------------------------')
+for it in range(n_iter):
+    print("Iterations: ",it," MSE: ",round(cost_history[it],3))
+    
+    fig,ax = plt.subplots(figsize=(10,8))
+ax.set_ylabel('J(MSE)')
+ax.set_xlabel('Iterations')
+_=ax.plot(range(n_iter),cost_history,'r-')
+
+#For Batch
+lr_list = [0.001,0.01,0.02,0.03,0.05,0.06]
+MSE_listB = []
+for i in lr_list:
+    lr =i
+    n_iter = 2000
+    theta = np.random.randn(2,1)
+    X_b = np.c_[np.ones((len(x),1)),x]
+    theta,cost_history,theta_history = gradient_descent(X_b,y,theta,lr,n_iter)
+    MSE_listB.append(round(cost_history[n_iter-1],3))
+    print('MSE for LR ',lr,': ',round(cost_history[n_iter-1],3))
+plt.plot(lr_list,MSE_listB,'r-',)
+plt.xlabel('Learning Rate')
+plt.ylabel('MSE')
+plt.title('MSE vs. learning rate')
+plt.show()
+
+#For MSE vs learning rate
+lr_list = [0.001,0.01,0.02,0.03,0.05,0.06]
+MSE_lists = []
+for i in lr_list:
+    lr =i
+    n_iter = 2000
+    theta = np.random.randn(2,1)
+    X_b = np.c_[np.ones((len(x),1)),x]
+    theta,cost_history = stocashtic_gradient_descent(X_b,y,theta,lr,n_iter)
+    MSE_lists.append(round(cost_history[n_iter-1],3))
+    print('MSE for LR ',lr,': ',round(cost_history[n_iter-1],3))
+plt.plot(lr_list,MSE_lists,'r-',)
+plt.xlabel('Learning Rate')
+plt.ylabel('MSE')
+plt.title('MSE vs. learning rate')
+plt.show()
+ 
+ 
