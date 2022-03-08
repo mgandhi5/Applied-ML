@@ -1,0 +1,135 @@
+#Creating Dataset and Displaying Poly fit over it
+import matplotlib.pyplot as plt
+import numpy as np
+
+def round_num(num, places):
+    return int(num*(10**places))/(10**places)
+
+noise_scale = 100
+number_of_samples = 50
+plt.style.use('seaborn-whitegrid')
+
+x = 25*(np.random.rand(number_of_samples, 1) - 0.8)
+y = 7 * x + 15 * x **2 + 1 * x**3 + noise_scale*np.random.randn(number_of_samples, 1)
+
+n = 100
+x_fit = []
+for i in range(0,n):
+    x_fit.append((i/n)*25-20)
+
+coeff = np.polyfit(x.flatten(), y.flatten(), 5)
+print(round_num(coeff[0], 3), "x^3 +", round_num(coeff[1], 3), "x^2 +", round_num(coeff[2], 3), "x +", round_num(coeff[3], 3))
+
+y_fit = []
+fit_func = np.poly1d(coeff)
+for i in range(0,n):
+    y_fit.append(fit_func(x_fit[i]))
+
+
+plt.plot(x,y,'ro', x_fit, y_fit, 'g-')
+plt.show()
+
+def get_MSEs(x, y):
+    #Function Returns list MSEs for polynomial fit for order 1-8
+    x = x.flatten()
+    y = y.flatten()
+    
+    if (len(x) != len(y)):
+        print("x and y did not match length, check data")
+        return []
+    
+    #make best fit coefficient array for each order with poly fit
+    coeff_arr = [] #multidimentional array where coefficients for each order are coeff[order-1]
+    for i in range(1,9):
+        coeff_arr.append(np.polyfit(x, y, i))
+
+    #generate a function to calculate y-hat for each order for each data point
+    poly_func = []
+    for i in range(0,8):
+        poly_func.append(np.poly1d(coeff_arr[i]))
+
+
+    
+    MSEs = []
+    num_samples = len(x)
+    for i in range(0,8):
+        temp_sum = 0
+        for j in range(0,num_samples):
+            #calculate square difference between data point j and predicted for value for Order i-1
+            #and add to temp_sum
+            temp_sum += (y[j] - poly_func[i](x[j]))**2
+
+        MSEs.append(round_num((temp_sum/num_samples), 3))
+        
+    return MSEs
+
+MSE_arr = get_MSEs(x, y)
+order = [1,2,3,4,5,6,7,8]
+
+plt.bar(order, MSE_arr)
+plt.xlabel('Polynomial Order')
+plt.ylabel('Mean Square Error')
+plt.ylim([0,10000])
+plt.show()
+
+min_MSE = min(MSE_arr)
+best_order = MSE_arr.index(min_MSE)+1
+print('(Y-axis artifically clipped to show smaller variations in higher order)')
+print("\nFrom MSE, the best fit is of order ", best_order, " with a MSE of ", min_MSE)
+
+Noise = [150, 200, 400, 600, 1000]
+number_of_samples = 50
+plt.figure(num=None, figsize=(10, 12), dpi=80, facecolor='w')
+
+for n in range(0, len(Noise)):
+    noise_scale = Noise[n]
+
+    x = 25*(np.random.rand(number_of_samples, 1) - 0.8)
+    y = 7 * x + 15 * x**2 + 1 * x**3 + noise_scale*np.random.randn(number_of_samples, 1)
+
+    n_line = 100
+    x_fit = []
+    for i in range(0,n_line):
+        x_fit.append((i/n_line)*25-20)
+
+    coeff = np.polyfit(x.flatten(), y.flatten(), 8)
+
+    y_fit = []
+    fit_func = np.poly1d(coeff)
+    for i in range(0,n_line):
+        y_fit.append(fit_func(x_fit[i]))
+
+    temp = plt.subplot(3,2,(n+1))
+    plt.plot(x,y,'ro', x_fit, y_fit, 'g-')
+    plt.ylim([-1500,3000])
+    temp.title.set_text("Noise="+str(Noise[n]))
+plt.show()
+
+noise_scale = 100
+num_samples = [40, 30, 20, 10]
+plt.figure(num=None, figsize=(10, 12), dpi=80, facecolor='w')
+
+for n in range(0, len(num_samples)):
+    number_of_samples = num_samples[n]
+
+    x = 25*(np.random.rand(number_of_samples, 1) - 0.8)
+    y = 7 * x + 15 * x**2 + 1 * x**3 + noise_scale*np.random.randn(number_of_samples, 1)
+
+    n_line = 100
+    x_fit = []
+    for i in range(0,n_line):
+        x_fit.append((i/n_line)*25-20)
+
+    coeff = np.polyfit(x_data.flatten(), y_data.flatten(), 8)
+
+    y_fit = []
+    fit_func = np.poly1d(coeff)
+    for i in range(0,n_line):
+        y_fit.append(fit_func(x_fit[i]))
+
+    temp = plt.subplot(3,2,(n+1))
+    plt.plot(x_data,y_data,'ro', x_fit, y_fit, 'g-')
+    plt.ylim([-1500,3000])
+    temp.title.set_text("Samples="+str(num_samples[n]))
+plt.show()
+
